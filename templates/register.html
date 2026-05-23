@@ -1,0 +1,109 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+/* Стилі спільні — скопійовані з login.html */
+.auth-card {
+    max-width: 480px;
+    margin: 40px auto;
+    background: #fff;
+    border-radius: 24px;
+    padding: 36px 40px;
+    box-shadow: 0 20px 60px rgba(10, 38, 18, 0.12), 0 4px 16px rgba(10, 38, 18, 0.06);
+}
+.auth-title { font-size: 26px; font-weight: 900; color: var(--text); margin: 0 0 6px; text-align: center; }
+.auth-subtitle { text-align: center; color: var(--muted); font-size: 14px; margin: 0 0 28px; }
+.role-tabs { display: grid; grid-template-columns: 1fr 1fr; background: #f0f4f1; border-radius: 14px; padding: 4px; margin-bottom: 28px; gap: 4px; }
+.role-tab { display: block; text-align: center; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 14px; text-decoration: none; color: var(--muted); transition: all 0.2s ease; }
+.role-tab.active { background: #fff; color: var(--primary); box-shadow: 0 2px 8px rgba(10, 38, 18, 0.1); }
+.role-tab:not(.active):hover { color: var(--primary); background: rgba(255,255,255,0.5); }
+.input-wrap { position: relative; margin-bottom: 16px; }
+.input-wrap label { font-size: 13px; font-weight: 700; color: var(--text); margin-bottom: 6px; display: block; }
+.input-icon-wrap { position: relative; }
+.input-icon-wrap .icon-left { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 16px; pointer-events: none; opacity: 0.5; }
+.input-icon-wrap input, .input-icon-wrap select { padding-left: 40px; border-radius: 12px; border: 1.5px solid #d4ddd6; background: #fafbfa; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
+.input-icon-wrap input:focus, .input-icon-wrap select:focus { outline: none; border-color: #f0a1b5; box-shadow: 0 0 0 4px rgba(240, 161, 181, 0.18); background: #fff; }
+.input-icon-wrap .icon-eye { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); cursor: pointer; font-size: 16px; opacity: 0.4; transition: opacity 0.2s; }
+.input-icon-wrap .icon-eye:hover { opacity: 0.8; }
+.btn-auth { width: 100%; padding: 14px; border: none; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; text-decoration: none; display: flex; align-items: center; justify-content: center; transition: all 0.2s ease; }
+.btn-auth.main { background: linear-gradient(180deg, #f4b8c8 0%, #e8899f 100%); color: #2c0a12; box-shadow: 0 4px 14px rgba(232, 137, 159, 0.4); margin-bottom: 12px; }
+.btn-auth.main:hover { background: linear-gradient(180deg, #f7c8d4 0%, #f0a1b5 100%); box-shadow: 0 6px 20px rgba(232, 137, 159, 0.5); transform: translateY(-1px); }
+.btn-auth.outline { background: transparent; color: var(--primary); border: 1.5px solid #c8dbc9; }
+.btn-auth.outline:hover { background: #f0f6f1; transform: translateY(-1px); }
+.divider { display: flex; align-items: center; gap: 12px; margin: 16px 0; }
+.divider span { color: var(--muted); font-size: 13px; }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: #e0e8e2; }
+</style>
+
+<div class="auth-card">
+    <h2 class="auth-title">Реєстрація в KUnow</h2>
+    <p class="auth-subtitle">Платформа адаптивного оцінювання з інформатики</p>
+
+        <div class="role-container" style="text-align: center; margin-bottom: 25px;">
+        <div class="role-badge">
+            {% if role == 'teacher' %}
+                <span>📋 Кабінет вчителя</span>
+            {% else %}
+                <span>🎓 Кабінет учня</span>
+            {% endif %}
+        </div>
+    </div>
+
+   <div style="text-align: center; margin-top: 20px;">
+        <a href="/" style="color: var(--muted); text-decoration: none; font-size: 14px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+            ← <span>Обрати іншу роль</span>
+        </a>
+    </div>
+
+    <form method="post">
+        <input type="hidden" name="role" value="{{ role }}">
+
+        <div class="input-wrap">
+            <label>Повне ім'я</label>
+            <div class="input-icon-wrap">
+                <span class="icon-left">✏️</span>
+                <input type="text" name="full_name" required value="{{ request.form.get('full_name', '') }}" placeholder="Іваненко Іван Іванович">
+            </div>
+        </div>
+
+        <div class="input-wrap">
+            <label>Логін</label>
+            <div class="input-icon-wrap">
+                <span class="icon-left">👤</span>
+                <input type="text" name="username" required value="{{ request.form.get('username', '') }}" placeholder="my_login">
+            </div>
+        </div>
+
+        <div class="input-wrap">
+            <label>Пароль</label>
+            <div class="input-icon-wrap">
+                <span class="icon-left">🔒</span>
+                <input type="password" name="password" id="pass1" required minlength="6" placeholder="Мінімум 6 символів">
+                <span class="icon-eye" onclick="togglePass('pass1')">👁️</span>
+            </div>
+        </div>
+
+        <div class="input-wrap">
+            <label>Підтвердіть пароль</label>
+            <div class="input-icon-wrap">
+                <span class="icon-left">🔒</span>
+                <input type="password" name="password2" id="pass2" required minlength="6" placeholder="Повторіть пароль">
+                <span class="icon-eye" onclick="togglePass('pass2')">👁️</span>
+            </div>
+        </div>
+
+        <button class="btn-auth main" type="submit">Створити акаунт</button>
+    </form>
+
+    <div class="divider"><span>вже є акаунт?</span></div>
+
+    <a href="{{ url_for('login', role=role) }}" class="btn-auth outline">Увійти</a>
+</div>
+
+<script>
+function togglePass(id) {
+    const input = document.getElementById(id);
+    input.type = input.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

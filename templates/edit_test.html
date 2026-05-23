@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2 class="page-title">Редагування тесту</h2>
+        <p class="page-subtitle">Змінюйте назву, предмет і опис тесту, а також керуйте окремими питаннями.</p>
+    </div>
+    <a href="{{ url_for('teacher_dashboard') }}" class="btn secondary" style="white-space: nowrap;">← Назад до панелі</a>
+</div>
+
+<section class="card hero-card">
+    <div class="card-title-row">
+        <h3>Основна інформація</h3>
+        <span class="badge">ID: {{ test['id'] }}</span>
+    </div>
+    <form method="post" class="form-grid one-column">
+        <label>Назва тесту<input type="text" name="title" value="{{ test['title'] }}" required></label>
+        <label>Предмет<input type="text" name="subject" value="{{ test['subject'] }}" required></label>
+        <label>Опис<textarea name="description" rows="3">{{ test['description'] or '' }}</textarea></label>
+        <button class="btn primary" type="submit">Зберегти зміни</button>
+    </form>
+</section>
+
+<section class="card">
+    <div class="card-title-row" style="margin-bottom: 24px;">
+        <h3>Питання тесту</h3>
+        <span class="badge">{{ questions|length }} питань</span>
+    </div>
+
+    {% if questions %}
+    <div style="display: grid; gap: 20px;"> {% for q in questions %}
+        <div class="question-manage-card">
+            <div style="flex: 1; min-width: 0;">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+                    <span class="meta-pill">{{ question_type_labels.get(q['question_type'], q['question_type']) }}</span>
+                    <span class="meta-pill">{{ q['difficulty'] }}</span>
+                    <span class="meta-pill">{{ q['points'] }} балів</span>
+                    <span class="meta-pill" style="background: #e8f5e9; color: #2e7d32;">{{ q['topic'] }}</span>
+                </div>
+                <div style="font-size: 15px; color: var(--text); line-height: 1.6; font-weight: 500;">
+                    {{ q['prompt'] }}
+                </div>
+            </div>
+            
+            <div class="question-actions">
+                <a href="{{ url_for('edit_question', question_id=q['id']) }}" class="btn secondary" style="padding: 8px 14px; font-size: 13px; text-decoration: none;">
+                    ✏️ Редагувати
+                </a>
+                
+                <form method="post" action="{{ url_for('copy_question', question_id=q['id']) }}" class="copy-form">
+                    <select name="target_test_id" required>
+                        <option value="">Копіювати в...</option>
+                        {% for target_test in all_tests %}
+                            <option value="{{ target_test['id'] }}" {% if target_test['id'] == test['id'] %}disabled{% endif %}>{{ target_test['title'] }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="btn secondary copy-btn">📋 Копіювати</button>
+                </form>
+
+                <form method="post" action="{{ url_for('delete_question', question_id=q['id']) }}"
+                      onsubmit="return confirm('Видалити це питання?')"
+                      style="flex-shrink: 0;">
+                    <button type="submit" class="btn delete-btn">🗑 Видалити</button>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="muted" style="text-align: center; padding: 40px 0;">Питань ще немає. Додайте їх через головну панель вчителя.</p>
+    {% endif %}
+</section>
+
+<style>
+/* Оновлені стилі для кращого простору */
+.card {
+    padding: 32px;
+    margin-bottom: 32px;
+    border-radius: 20px;
+}
+
+.question-manage-card {
+    display: flex;
+    align-items: center; /* Центрування по вертикалі */
+    gap: 24px;
+    padding: 20px 24px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: #fafcfa;
+    transition: all 0.2s ease;
+}
+
+.question-manage-card:hover {
+    box-shadow: 0 6px 18px rgba(10,38,18,0.08);
+    background: #fff;
+    transform: translateY(-2px);
+}
+
+.question-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.copy-form {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+.copy-form select {
+    max-width: 170px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 10px;
+    background: #fff;
+}
+.copy-btn {
+    padding: 8px 12px !important;
+    font-size: 13px !important;
+}
+
+.delete-btn {
+    padding: 8px 14px; 
+    font-size: 13px; 
+    background: #fff0f0; 
+    color: #c62828; 
+    border: 1px solid #f5c6c6; 
+    white-space: nowrap;
+}
+
+.delete-btn:hover {
+    background: #ffe5e5;
+}
+
+@media (max-width: 768px) {
+    .question-manage-card { 
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 16px;
+    }
+    .question-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,277 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2 class="page-title">Редагування питання</h2>
+        <p class="page-subtitle">Ви змінюєте деталі питання для тесту: {{ q['topic'] }}</p>
+    </div>
+    <a href="{{ url_for('edit_test', test_id=q['test_id']) }}" class="btn secondary">← Назад до тесту</a>
+</div>
+
+<section class="card hero-card edit-question-card">
+    <form method="post" class="form-grid one-column" id="editQuestionForm">
+        <label>Тема
+            <input type="text" name="topic" value="{{ q['topic'] }}" required>
+        </label>
+
+        <label>Тип завдання
+            <select name="question_type" id="questionTypeSelect" required>
+                {% for qtype in question_types %}
+                    <option value="{{ qtype }}" {% if q['question_type'] == qtype %}selected{% endif %}>{{ question_type_labels[qtype] }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Рівень складності
+            <select name="difficulty" required>
+                {% for diff in difficulties %}
+                    <option value="{{ diff }}" {% if q['difficulty'] == diff %}selected{% endif %}>{{ diff }}</option>
+                {% endfor %}
+            </select>
+        </label>
+
+        <label>Бали
+            <input type="number" name="points" value="{{ q['points'] }}" min="1" required>
+        </label>
+
+        <label>Текст питання
+            <textarea name="prompt" rows="4" required>{{ q['prompt'] }}</textarea>
+        </label>
+
+        <label>Посилання на зображення <small>(тільки для типу “Вибір за зображенням”, необов’язково)</small>
+            <input type="url" name="image_url" value="{{ q['image_url'] or '' }}" placeholder="https://...">
+        </label>
+
+        <label>Пояснення <small>(необов’язково)</small>
+            <textarea name="explanation" rows="3">{{ q['explanation'] or '' }}</textarea>
+        </label>
+
+        <div class="answer-settings">
+            <div class="answer-settings-title">Відповіді</div>
+
+            <div class="answer-block" data-answer-block="choice">
+                <p class="answer-help" id="choiceHelp">Додайте варіанти та позначте правильні.</p>
+                <div id="choiceAnswersList" class="answer-list"></div>
+                <button type="button" class="mini-btn" onclick="addChoiceAnswer()">+ Додати варіант</button>
+            </div>
+
+            <div class="answer-block" data-answer-block="matching">
+                <p class="answer-help">Запишіть пари для встановлення відповідності.</p>
+                <div id="matchingAnswersList" class="answer-list"></div>
+                <button type="button" class="mini-btn" onclick="addMatchingPair()">+ Додати пару</button>
+            </div>
+
+            <div class="answer-block" data-answer-block="text">
+                <p class="answer-help">Впишіть правильну коротку відповідь або кілька допустимих варіантів.</p>
+                <div id="textAnswersList" class="answer-list"></div>
+                <button type="button" class="mini-btn" onclick="addTextAnswer()">+ Додати ще одну правильну відповідь</button>
+            </div>
+
+            <div class="answer-block" data-answer-block="ordering">
+                <p class="answer-help">Додайте елементи у правильному порядку.</p>
+                <div id="orderingAnswersList" class="answer-list"></div>
+                <button type="button" class="mini-btn" onclick="addOrderItem()">+ Додати елемент</button>
+            </div>
+
+            <div class="answer-block" data-answer-block="numeric">
+                <p class="answer-help">Введіть правильну числову відповідь.</p>
+                <input type="text" class="numeric-answer" placeholder="Наприклад: 12 або 3.14">
+            </div>
+
+            <div class="answer-block" data-answer-block="true_false">
+                <p class="answer-help">Оберіть правильну відповідь.</p>
+                <label class="correct-check true-false-option"><input type="radio" name="true_false_correct" value="true"> Так</label>
+                <label class="correct-check true-false-option"><input type="radio" name="true_false_correct" value="false"> Ні</label>
+            </div>
+
+            <div class="answer-block" data-answer-block="fill_blank">
+                <p class="answer-help">Впишіть правильну відповідь для пропуску. Можна додати кілька допустимих варіантів.</p>
+                <div id="blankAnswersList" class="answer-list"></div>
+                <button type="button" class="mini-btn" onclick="addBlankAnswer()">+ Додати варіант</button>
+            </div>
+
+            <input type="hidden" name="options_json" id="optionsJson">
+        </div>
+
+        <div style="margin-top: 20px;">
+            <button class="btn primary" type="submit">Зберегти зміни</button>
+        </div>
+    </form>
+</section>
+
+<style>
+.edit-question-card { max-width: 820px; margin-left: auto; margin-right: auto; }
+.answer-settings { display: grid; gap: 12px; }
+.answer-settings-title { color: #061d18; font-weight: 900; font-size: 15px; }
+.answer-block { display: none; gap: 10px; }
+.answer-block.active { display: grid; }
+.answer-help { margin: 0; color: var(--muted); font-size: 13px; font-weight: 700; line-height: 1.4; }
+.answer-list { display: grid; gap: 10px; }
+.answer-row, .matching-row { display: grid; gap: 10px; }
+.answer-row { grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.matching-row { grid-template-columns: 1fr 1fr; }
+.correct-check { display: inline-flex !important; align-items: center; gap: 6px; margin: 0 !important; color: #061d18 !important; font-size: 13px !important; font-weight: 800 !important; white-space: nowrap; }
+.correct-check input { width: auto !important; margin: 0 !important; accent-color: #ef9fb5; }
+.mini-btn { border: 1.5px solid #153b34; border-radius: 10px; background: #fff; color: #061d18; padding: 10px 12px; font-weight: 900; cursor: pointer; }
+.mini-btn:hover { background: #f8edf1; }
+@media (max-width: 560px) { .answer-row, .matching-row { grid-template-columns: 1fr; } }
+</style>
+
+<script>
+const existingOptions = {{ options_json|safe }};
+const questionTypeSelect = document.getElementById('questionTypeSelect');
+const editQuestionForm = document.getElementById('editQuestionForm');
+const optionsJsonField = document.getElementById('optionsJson');
+const choiceHelp = document.getElementById('choiceHelp');
+
+function getQuestionType() { return questionTypeSelect ? questionTypeSelect.value : 'single_choice'; }
+function clearList(id) { document.getElementById(id).innerHTML = ''; }
+function showAnswerBlock(name) {
+    document.querySelectorAll('[data-answer-block]').forEach(block => block.classList.remove('active'));
+    const block = document.querySelector('[data-answer-block="' + name + '"]');
+    if (block) block.classList.add('active');
+}
+
+function updateAnswerLayout() {
+    const type = getQuestionType();
+    if (type === 'matching') return showAnswerBlock('matching');
+    if (type === 'text_input') return showAnswerBlock('text');
+    if (type === 'ordering') return showAnswerBlock('ordering');
+    if (type === 'numeric') return showAnswerBlock('numeric');
+    if (type === 'true_false') return showAnswerBlock('true_false');
+    if (type === 'fill_blank') return showAnswerBlock('fill_blank');
+    showAnswerBlock('choice');
+    const correctInputs = document.querySelectorAll('.choice-answer-correct');
+    if (type === 'multiple_choice') {
+        choiceHelp.textContent = 'Додайте кілька варіантів і позначте всі правильні.';
+        correctInputs.forEach(input => { input.type = 'checkbox'; input.removeAttribute('name'); });
+    } else {
+        choiceHelp.textContent = type === 'image_choice' ? 'У варіанти вставте URL зображення або URL|підпис і позначте один правильний.' : 'Додайте кілька варіантів і позначте один правильний.';
+        correctInputs.forEach(input => { input.type = 'radio'; input.name = 'single_correct_tmp'; });
+    }
+    document.querySelectorAll('.choice-answer-text').forEach(input => { input.placeholder = type === 'image_choice' ? 'URL зображення або URL|підпис' : 'Варіант відповіді'; });
+}
+
+function addChoiceAnswer(text = '', correct = false) {
+    const list = document.getElementById('choiceAnswersList');
+    const type = getQuestionType() === 'multiple_choice' ? 'checkbox' : 'radio';
+    const nameAttr = type === 'radio' ? 'name="single_correct_tmp"' : '';
+    const row = document.createElement('div');
+    row.className = 'answer-row choice-answer-row';
+    row.innerHTML = '<input type="text" class="choice-answer-text"><label class="correct-check"><input type="' + type + '" ' + nameAttr + ' class="choice-answer-correct"> Правильна</label>';
+    row.querySelector('.choice-answer-text').placeholder = getQuestionType() === 'image_choice' ? 'URL зображення або URL|підпис' : 'Варіант відповіді';
+    row.querySelector('.choice-answer-text').value = text || '';
+    row.querySelector('.choice-answer-correct').checked = !!correct;
+    list.appendChild(row);
+    updateAnswerLayout();
+}
+function addMatchingPair(match_key = '', match_value = '') {
+    const list = document.getElementById('matchingAnswersList');
+    const row = document.createElement('div');
+    row.className = 'matching-row';
+    row.innerHTML = '<input type="text" class="match-key" placeholder="Ліва частина / поняття"><input type="text" class="match-value" placeholder="Права частина / відповідність">';
+    row.querySelector('.match-key').value = match_key || '';
+    row.querySelector('.match-value').value = match_value || '';
+    list.appendChild(row);
+}
+function addTextAnswer(text = '') {
+    const list = document.getElementById('textAnswersList');
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'text-correct-answer'; input.placeholder = 'Правильна відповідь'; input.value = text || '';
+    list.appendChild(input);
+}
+function addOrderItem(text = '') {
+    const list = document.getElementById('orderingAnswersList');
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'order-item'; input.placeholder = 'Елемент ' + (list.querySelectorAll('.order-item').length + 1); input.value = text || '';
+    list.appendChild(input);
+}
+function addBlankAnswer(text = '') {
+    const list = document.getElementById('blankAnswersList');
+    const input = document.createElement('input');
+    input.type = 'text'; input.className = 'blank-answer'; input.placeholder = 'Варіант відповіді'; input.value = text || '';
+    list.appendChild(input);
+}
+
+function loadExistingOptions() {
+    clearList('choiceAnswersList'); clearList('matchingAnswersList'); clearList('textAnswersList'); clearList('orderingAnswersList'); clearList('blankAnswersList');
+    const type = getQuestionType();
+    if (type === 'single_choice' || type === 'multiple_choice' || type === 'image_choice') {
+        (existingOptions.length ? existingOptions : [{}, {}]).forEach(item => addChoiceAnswer(item.text || '', item.correct));
+    } else if (type === 'matching') {
+        (existingOptions.length ? existingOptions : [{}, {}]).forEach(item => addMatchingPair(item.match_key || '', item.match_value || ''));
+    } else if (type === 'text_input') {
+        (existingOptions.length ? existingOptions : [{}]).forEach(item => addTextAnswer(item.text || ''));
+    } else if (type === 'ordering') {
+        const ordered = existingOptions.slice().sort((a, b) => (a.order || 0) - (b.order || 0));
+        (ordered.length ? ordered : [{}, {}]).forEach(item => addOrderItem(item.text || ''));
+    } else if (type === 'numeric') {
+        document.querySelector('.numeric-answer').value = existingOptions[0]?.text || '';
+    } else if (type === 'true_false') {
+        const value = existingOptions[0]?.text || '';
+        const input = document.querySelector('input[name="true_false_correct"][value="' + value + '"]');
+        if (input) input.checked = true;
+    } else if (type === 'fill_blank') {
+        (existingOptions.length ? existingOptions : [{}]).forEach(item => addBlankAnswer(item.text || ''));
+    }
+    updateAnswerLayout();
+}
+
+function buildOptionsJson() {
+    const type = getQuestionType();
+    const data = [];
+    if (type === 'single_choice' || type === 'multiple_choice' || type === 'image_choice') {
+        document.querySelectorAll('.choice-answer-row').forEach(row => {
+            const text = row.querySelector('.choice-answer-text').value.trim();
+            const correct = row.querySelector('.choice-answer-correct').checked;
+            if (text) data.push({ text, correct });
+        });
+        if (data.length < 2) { alert('Додайте мінімум два варіанти відповіді.'); return false; }
+        const correctCount = data.filter(item => item.correct).length;
+        if (type === 'multiple_choice' && correctCount < 1) { alert('Позначте хоча б одну правильну відповідь.'); return false; }
+        if (type !== 'multiple_choice' && correctCount !== 1) { alert('Для цього типу потрібно позначити рівно одну правильну відповідь.'); return false; }
+    }
+    if (type === 'matching') {
+        document.querySelectorAll('.matching-row').forEach(row => {
+            const match_key = row.querySelector('.match-key').value.trim();
+            const match_value = row.querySelector('.match-value').value.trim();
+            if (match_key && match_value) data.push({ match_key, match_value, correct: true });
+        });
+        if (data.length < 2) { alert('Додайте мінімум дві пари відповідностей.'); return false; }
+    }
+    if (type === 'text_input') {
+        document.querySelectorAll('.text-correct-answer').forEach(input => { const text = input.value.trim(); if (text) data.push({ text, correct: true }); });
+        if (data.length < 1) { alert('Впишіть правильну відповідь.'); return false; }
+    }
+    if (type === 'ordering') {
+        document.querySelectorAll('.order-item').forEach((input, index) => { const text = input.value.trim(); if (text) data.push({ text, order: index + 1, correct: true }); });
+        if (data.length < 2) { alert('Додайте мінімум два елементи для впорядкування.'); return false; }
+    }
+    if (type === 'numeric') {
+        const text = document.querySelector('.numeric-answer').value.trim();
+        if (!text) { alert('Впишіть правильну числову відповідь.'); return false; }
+        data.push({ text, correct: true });
+    }
+    if (type === 'true_false') {
+        const checked = document.querySelector('input[name="true_false_correct"]:checked');
+        if (!checked) { alert('Оберіть правильну відповідь Так або Ні.'); return false; }
+        data.push({ text: checked.value, correct: true });
+    }
+    if (type === 'fill_blank') {
+        document.querySelectorAll('.blank-answer').forEach(input => { const text = input.value.trim(); if (text) data.push({ text, correct: true }); });
+        if (data.length < 1) { alert('Впишіть правильну відповідь для пропуску.'); return false; }
+    }
+    optionsJsonField.value = JSON.stringify(data);
+    return true;
+}
+
+questionTypeSelect.addEventListener('change', function () {
+    existingOptions.length = 0;
+    loadExistingOptions();
+});
+editQuestionForm.addEventListener('submit', function (event) {
+    if (!buildOptionsJson()) event.preventDefault();
+});
+loadExistingOptions();
+</script>
+{% endblock %}

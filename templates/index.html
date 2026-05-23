@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap');
+
+    body {
+        background-color: #f0f4f3; /* Легкий відтінок білого з зеленцою */
+        font-family: 'Plus Jakarta Sans', sans-serif;
+        margin: 0;
+        overflow: hidden; 
+    }
+
+    .site-header { display: none !important; }
+
+    .main-wrapper {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+        z-index: 1;
+        overflow: hidden;
+    }
+
+    /* --- Анімований фон з багатьма об'єктами --- */
+    .background-objects {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .floating-item {
+        position: absolute;
+        opacity: 0.15; /* Зробив трохи чіткішими */
+        animation: float infinite ease-in-out;
+    }
+
+    .pink-item { color: #ec407a; }
+    .green-item { color: #153b34; }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0) rotate(0deg); }
+        33% { transform: translate(15px, -25px) rotate(5deg); }
+        66% { transform: translate(-10px, 15px) rotate(-5deg); }
+    }
+
+    /* Розставляємо багато об'єктів по всьому екрану */
+    .it-1 { top: 10%; left: 5%; font-size: 3rem; animation-duration: 7s; }
+    .it-2 { top: 15%; right: 10%; font-size: 4rem; animation-duration: 9s; }
+    .it-3 { bottom: 15%; left: 10%; font-size: 3.5rem; animation-duration: 11s; }
+    .it-4 { bottom: 20%; right: 15%; font-size: 2.5rem; animation-duration: 8s; }
+    .it-5 { top: 45%; left: 15%; font-size: 2rem; animation-duration: 10s; }
+    .it-6 { top: 40%; right: 5%; font-size: 4.5rem; animation-duration: 12s; }
+    .it-7 { top: 5%; left: 40%; font-size: 2.5rem; animation-duration: 6s; }
+    .it-8 { bottom: 5%; left: 45%; font-size: 3rem; animation-duration: 13s; }
+    .it-9 { top: 70%; left: 5%; font-size: 2.8rem; animation-duration: 9s; }
+    .it-10 { top: 80%; right: 30%; font-size: 2.2rem; animation-duration: 11s; }
+
+    /* --- Контент --- */
+    .brand-section {
+        text-align: center;
+        margin-bottom: 50px;
+    }
+
+    .brand-name {
+        font-size: 6rem;
+        font-weight: 800;
+        color: #153b34; /* Темно-зелений */
+        margin: 0;
+        letter-spacing: -4px;
+    }
+
+    .brand-name span { color: #ec407a; } /* Рожева крапка */
+
+    .brand-description {
+        font-size: 1.3rem;
+        color: #475569;
+        max-width: 650px;
+        margin: 10px auto 0;
+        font-weight: 600;
+    }
+
+    .selection-label {
+        background: #ffffff;
+        padding: 12px 30px;
+        border-radius: 100px;
+        font-weight: 800;
+        font-size: 0.9rem;
+        color: #153b34;
+        letter-spacing: 1.5px;
+        border: 2px solid #ec407a; /* Рожева рамка */
+        margin-bottom: 40px;
+        text-transform: uppercase;
+        box-shadow: 0 4px 15px rgba(236, 64, 122, 0.2);
+    }
+
+    .cards-grid {
+        display: flex;
+        gap: 40px;
+        z-index: 10;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.8);
+        backdrop-filter: blur(15px);
+        border: 2px solid transparent;
+        border-radius: 40px;
+        width: 300px;
+        padding: 40px;
+        text-decoration: none;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+    }
+
+    .glass-card.teacher:hover {
+        border-color: #153b34;
+        transform: translateY(-15px);
+        box-shadow: 0 25px 50px -12px rgba(21, 59, 52, 0.2);
+    }
+
+    .glass-card.student:hover {
+        border-color: #ec407a;
+        transform: translateY(-15px);
+        box-shadow: 0 25px 50px -12px rgba(236, 64, 122, 0.2);
+    }
+
+    .role-img {
+        width: 140px;
+        height: 140px;
+        margin-bottom: 25px;
+        border-radius: 20px;
+        transition: transform 0.4s ease;
+    }
+
+    .glass-card:hover .role-img {
+        transform: scale(1.15);
+    }
+
+    .glass-card h2 {
+        font-size: 1.8rem;
+        color: #153b34;
+        margin-bottom: 12px;
+        font-weight: 800;
+    }
+
+    .glass-card p {
+        color: #64748b;
+        font-size: 1rem;
+        text-align: center;
+        margin: 0;
+        line-height: 1.4;
+    }
+</style>
+
+<div class="main-wrapper">
+    <div class="background-objects">
+        <i class="fa-solid fa-book floating-item green-item it-1"></i>
+        <i class="fa-solid fa-display floating-item pink-item it-2"></i>
+        <i class="fa-solid fa-mouse floating-item green-item it-3"></i>
+        <i class="fa-solid fa-keyboard floating-item pink-item it-4"></i>
+        <i class="fa-solid fa-code floating-item green-item it-5"></i>
+        <i class="fa-solid fa-laptop-code floating-item pink-item it-6"></i>
+        <i class="fa-solid fa-microchip floating-item green-item it-7"></i>
+        <i class="fa-solid fa-book-open floating-item pink-item it-8"></i>
+        <i class="fa-solid fa-server floating-item green-item it-9"></i>
+        <i class="fa-solid fa-database floating-item pink-item it-10"></i>
+    </div>
+
+    <div class="brand-section">
+        <h1 class="brand-name">KUnow<span>.</span></h1>
+        <p class="brand-description">Платформа адаптивного оцінювання з інформатики </p>
+    </div>
+
+    <div class="selection-label">Оберіть свою роль</div>
+
+    <div class="cards-grid">
+        <a href="{{ url_for('choose_action', role='teacher') }}" class="glass-card teacher">
+            <img src="{{ url_for('static', filename='images/teacher_icon.png') }}" class="role-img" alt="Вчитель">
+            <h2>Вчитель</h2>
+            <p>Створюйте розумні тести та аналізуйте прогрес класів</p>
+        </a>
+
+        <a href="{{ url_for('choose_action', role='student') }}" class="glass-card student">
+            <img src="{{ url_for('static', filename='images/student_icon.avif') }}" class="role-img" alt="Учень">
+            <h2>Учень</h2>
+            <p>Проходьте адаптивні тести та отримуйте поради для навчання</p>
+        </a>
+    </div>
+</div>
+{% endblock %}

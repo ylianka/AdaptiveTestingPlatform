@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2 class="page-title">Ручна перевірка відкритих відповідей</h2>
+        <p class="page-subtitle">Тут можна зарахувати або відхилити відповіді типу «відкрита відповідь» і «заповнення пропусків».</p>
+    </div>
+    <a href="{{ url_for('teacher_dashboard') }}" class="btn secondary">← Назад</a>
+</div>
+
+<section class="card">
+    <div class="card-title-row">
+        <h3>Відповіді учнів</h3>
+        <span class="badge">{{ review_items|length }} записів</span>
+    </div>
+
+    {% if review_items %}
+    <div class="review-list">
+        {% for item in review_items %}
+        <article class="review-card {% if item.review_status == 'pending' %}pending{% endif %}">
+            <div class="review-head">
+                <div>
+                    <h4>{{ item.student_name }}</h4>
+                    <p>{{ item.test_title }} · {{ item.topic }} · {{ question_type_labels.get(item.question_type, item.question_type) }}</p>
+                </div>
+                <span class="status {{ item.review_status }}">
+                    {% if item.review_status == 'pending' %}Очікує перевірки{% elif item.review_status == 'approved' %}Зараховано вручну{% elif item.review_status == 'rejected' %}Не зараховано{% else %}Автоматично{% endif %}
+                </span>
+            </div>
+
+            <div class="review-body">
+                <b>Питання:</b>
+                <p>{{ item.prompt }}</p>
+                <b>Відповідь учня:</b>
+                <p class="student-answer">{{ item.student_answer or '—' }}</p>
+                <div class="score-line">Поточний бал: <b>{{ item.score_awarded }}</b> / {{ item.points }}</div>
+                {% if item.teacher_comment %}<p class="muted">Коментар: {{ item.teacher_comment }}</p>{% endif %}
+            </div>
+
+            <form method="post" class="review-actions">
+                <input type="hidden" name="answer_id" value="{{ item.id }}">
+                <input type="text" name="teacher_comment" placeholder="Коментар вчителя, за потреби">
+                <button class="btn primary" name="decision" value="approve" type="submit">Зарахувати</button>
+                <button class="btn delete-btn" name="decision" value="reject" type="submit">Не зарахувати</button>
+            </form>
+        </article>
+        {% endfor %}
+    </div>
+    {% else %}
+        <p class="muted">Відкритих відповідей для перевірки поки немає.</p>
+    {% endif %}
+</section>
+
+<style>
+.review-list{display:grid;gap:18px}.review-card{border:1.5px solid var(--border);border-radius:18px;padding:20px;background:#fff}.review-card.pending{border-color:var(--pink);box-shadow:0 8px 22px rgba(211,107,142,.12)}.review-head{display:flex;justify-content:space-between;gap:16px;align-items:flex-start}.review-head h4{margin:0}.review-head p{margin:6px 0 0;color:var(--muted);font-weight:700}.status{border-radius:999px;padding:8px 12px;font-weight:900;background:#eef5ef;color:var(--green);white-space:nowrap}.status.pending{background:var(--pink-light);color:var(--pink-dark)}.status.approved{background:#e8f5e9;color:#2e7d32}.status.rejected{background:#fff0f0;color:#b71c1c}.review-body{margin-top:16px;display:grid;gap:8px}.review-body p{margin:0;line-height:1.55}.student-answer{padding:12px;border-radius:12px;background:#f7faf7;border:1px solid var(--border);font-weight:800}.score-line{font-weight:800;color:var(--text)}.review-actions{margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}.review-actions input[type=text]{flex:1;min-width:220px}.delete-btn{background:#fff0f0;color:#c62828;border:1.5px solid #f5c6c6;border-radius:999px;padding:10px 14px;font-weight:900}.btn.secondary{background:#fff;color:var(--green);border:1.5px solid var(--green)}@media(max-width:700px){.review-head{display:grid}.status{width:max-content}.review-actions{display:grid}.review-actions input[type=text]{min-width:0;width:100%}}
+</style>
+{% endblock %}
