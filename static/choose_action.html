@@ -1,0 +1,59 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+    .auth-choice {
+        max-width: 400px;
+        margin: 100px auto;
+        text-align: center;
+        background: white;
+        padding: 40px;
+        border-radius: 20px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .btn-group {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    .btn-custom {
+        padding: 15px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: bold;
+        transition: 0.3s;
+    }
+    .btn-login {
+        background-color: #2d5a27; /* Темно-зелений */
+        color: white;
+    }
+    .btn-register {
+        background-color: #fce4ec; /* Світло-рожевий */
+        color: #c2185b;
+        border: 1px solid #f8bbd0;
+    }
+    .back-link {
+        display: block;
+        margin-top: 20px;
+        color: #777;
+        font-size: 0.9rem;
+    }
+</style>
+
+<div class="auth-choice">
+    <h2>Ви обрали роль: <br>
+        <span style="color: {{ '#2d5a27' if role == 'teacher' else '#ff69b4' }}">
+            {{ 'Вчитель' if role == 'teacher' else 'Учень' }}
+        </span>
+    </h2>
+    <p>Що ви хочете зробити?</p>
+
+    <div class="btn-group">
+        <a href="{{ url_for('login', role=role) }}" class="btn-custom btn-login">Увійти</a>
+        <a href="{{ url_for('register', role=role) }}" class="btn-custom btn-register">Зареєструватися</a>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back-link">← Повернутися до вибору ролі</a>
+</div>
+{% endblock %}
